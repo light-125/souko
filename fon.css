@@ -1,0 +1,10 @@
+@font-face {
+  font-family: 'Zen Kaku Gothic New';
+  src: url('https://cdn.jsdelivr.net/gh/light-125/souko@main/zen-kaku-gothic-new-v18-japanese_latin-700.eot'); 
+  src: url('https://cdn.jsdelivr.net/gh/light-125/souko@main/zen-kaku-gothic-new-v18-japanese_latin-700.eot?#iefix') format('embedded-opentype'),
+       url('https://cdn.jsdelivr.net/gh/light-125/souko@main/zen-kaku-gothic-new-v18-japanese_latin-700.woff') format('woff'),
+       url('https://cdn.jsdelivr.net/gh/light-125/souko@main/zen-kaku-gothic-new-v18-japanese_latin-700.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
