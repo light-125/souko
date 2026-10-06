@@ -1,0 +1,59 @@
+{
+  "groups": {
+    "1. バイナリ・テキスト変換系": {
+      "base64": "Base64 (標準64文字表現)",
+      "hex": "Hex (16進数エンコード)",
+      "url": "Percent-encoding (URL符号化)",
+      "html": "HTML Entity (エスケープ)",
+      "uuencode": "UUencode (大昔のUnix画像用)",
+      "xxencode": "XXencode (UUencode改良版)",
+      "binhex": "BinHex (古いMac用符号化)",
+      "quoted": "Quoted-Printable (メール等価)"
+    },
+    "2. インターネット・特殊通信系": {
+      "punycode": "Punycode (日本語ドメイン xn--)",
+      "utf1": "UTF-1 (廃止された幻の規格)",
+      "utf7": "UTF-7 (古いメール用Unicode)",
+      "utfebcdic": "UTF-EBCDIC (大型計算機用)",
+      "utf8bom": "UTF-8-BOM (BOM目印付与)",
+      "bencode": "Bencode (BitTorrent構造化)",
+      "msgpack": "MessagePack (超小型バイナリ)"
+    },
+    "3. プログラミング・開発系": {
+      "cstring": "C-String Escape (\\n,\\t)",
+      "octal": "Octal Escape (超古8進数)",
+      "regex": "Regex Escape (メタ文字無効)",
+      "unicode_esc": "Unicode Escape (\\u3053)",
+      "sql": "SQL Hex Literal (X'4142')"
+    },
+    "4. 通信・電信・レガシー電気系": {
+      "morse": "Morse Code (モールス符号)",
+      "baudot": "Baudot Code (5ビットテレタイプ)",
+      "murray": "Murray Code (パンチテープ用)",
+      "fieldata": "Fieldata / FIELDATA (軍事用6Bit)",
+      "bcd": "BCD (二化進十進・4Bit)",
+      "ebcdic": "EBCDIC (IBM大型機覇権コード)"
+    },
+    "5. ジョーク・パズル言語系": {
+      "brainfuck": "Brainfuck (8記号難解言語)",
+      "ook": "Ook! (オランウータン語)",
+      "cow": "Cow (牛の鳴き声 MoO)",
+      "pikachu": "Pikachu (ピカチュウ語)",
+      "whitespace": "WhiteSpace (透明・空白文字)"
+    },
+    "6. データ圧縮・エラー訂正系": {
+      "huffman": "Huffman Coding (ハフマン圧縮)",
+      "rle": "Run Length (連続文字圧縮)",
+      "hamming": "Hamming Code (自己エラー修復)",
+      "reed": "Reed-Solomon (QRキズ修復)",
+      "lz77": "LZ77 (辞書スライド型圧縮)"
+    }
+  },
+  "morse": {
+    "A": ".-", "B": "-...", "C": "-.-.", "D": "-..", "E": ".", "F": "..-.", "G": "--.", "H": "....", 
+    "I": "..", "J": ".---", "K": "-.-", "L": ".-..", "M": "--", "N": "-.", "O": "---", "P": ".--.", 
+    "Q": "--.-", "R": ".-.", "S": "...", "T": "-", "U": "..-", "V": "...-", "W": ".--", "X": "-..-", 
+    "Y": "-.--", "Z": "--..", "1": ".----", "2": "..---", "3": "...--", "4": "....-", "5": ".....", 
+    "6": "-....", "7": "--...", "8": "---..", "9": "----.", "0": "-----", " ": "/"
+  }
+}
