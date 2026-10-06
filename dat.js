@@ -4,7 +4,7 @@ let config = {};
 // 1. 外部JSONファイルの読み込みとセレクトボックス生成
 async function init() {
     try {
-        const res = await fetch('data.json');
+        const res = await fetch('https://cdn.jsdelivr.net/gh/light-125/souko@main/settings.json');
         config = await res.json();
         
         const sel = document.getElementById('sel');
