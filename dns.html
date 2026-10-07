@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>C#ステルス版 インストーラー</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; text-align: center; padding-top: 50px; background: #f4f4f9; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .btn { display: inline-block; padding: 15px 40px; font-size: 18px; font-weight: bold; color: #fff; background: #e51c23; border: none; border-radius: 5px; cursor: pointer; text-decoration: none; box-shadow: 0 4px 6px rgba(0,0,0,0.15); transition: background 0.2s; }
+        .btn:hover { background: #b71c1c; }
+        .instructions { margin-top: 30px; text-align: left; background: #f9f9f9; padding: 20px; border-left: 4px solid #e51c23; border-radius: 4px; font-size: 14px; line-height: 1.8; }
+        code { background: #eef; padding: 2px 6px; border-radius: 4px; font-family: monospace; font-weight: bold; color: #d0104c; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>C#コンパイル型・完全ステルスシステム</h2>
+    <p>バッチファイルを実行すると、Windows標準のコンパイラでC#アプリが自動生成され、即座に完全非表示で実行されます。</p>
+    
+    <button class="btn" onclick="downloadCSharpSystem()">setup_system.bat を取得</button>
+
+    <div class="instructions">
+        <strong>【C#版の使い方】</strong><br>
+        1. ダウンロードした <code>setup_system.bat</code> を実行します。<br>
+        ※実行した瞬間、<strong>一瞬すら黒い画面を出さずに</strong>C#アプリが自動ビルドされ、裏でブラウザの常時監視がスタートします。<br>
+        2. サインアウトや再起動は<strong>一切不要</strong>です。その瞬間からChromeやEdgeが5秒ごとに強制終了されます。<br>
+        3. 停止・削除したい時は、<code>Win</code> + <code>R</code> ➡️ <code>un</code> ➡️ <code>Enter</code> を押します。<br>
+        ※アンインストーラーも完全非表示で動作し、C#アプリの停止と生成されたファイルをすべて消去して元通りにします。
+    </div>
+</div>
+
+<script>
+function downloadCSharpSystem() {
+    const batText = `@echo off\r\n` +
+                    `if "%~1"=="h" goto :stealth\r\n` +
+                    `mshta vbscript:CreateObject("Wscript.Shell").Run(chr(34)^&"%~f0"^&chr(34)^&" h",0)(window.close)\r\n` +
+                    `exit /b\r\n` +
+                    `:stealth\r\n` +
+                    `set "TARGET_DIR=%USERPROFILE%\\Documents\\MyCommands"\r\n` +
+                    `set "CS_FILE=%TARGET_DIR%\\BrowserBlocker.cs"\r\n` +
+                    `set "EXE_FILE=%TARGET_DIR%\\BrowserBlocker.exe"\r\n` +
+                    `set "UN_BAT=%TARGET_DIR%\\un.bat"\r\n` +
+                    `if not exist "%TARGET_DIR%" mkdir "%TARGET_DIR%"\r\n` +
+                    
+                    `:: 1. C#のソースコードを出力\r\n` +
+                    `(echo using System;\r\n` +
+                    `echo using System.Diagnostics;\r\n` +
+                    `echo using System.Threading;\r\n` +
+                    `echo class Program {\r\n` +
+                    `echo     static void Main^(^) {\r\n` +
+                    `echo         while ^(true^) {\r\n` +
+                    `echo             try {\r\n` +
+                    `echo                 foreach ^(var p in Process.GetProcessesByName^("chrome"^)^) { p.Kill^(^); }\r\n` +
+                    `echo                 foreach ^(var p in Process.GetProcessesByName^("msedge"^)^) { p.Kill^(^); }\r\n` +
+                    `echo             } catch ^(Exception^) { }\r\n` +
+                    `echo             Thread.Sleep^(5000^);\r\n` +
+                    `echo         }\r\n` +
+                    `echo     }\r\n` +
+                    `echo }^) > "%CS_FILE%"\r\n` +
+                    
+                    `:: 2. Windows標準のcsc.exeを探してC#をEXEにコンパイル（Windowsフォーム形式/target:winexeにすることで画面を完全非表示化）\r\n` +
+                    `for /r "C:\\Windows\\Microsoft.NET\\Framework64" %%i in ^(csc.exe^) do if exist "%%i" set "CSC_PATH=%%i"\r\n` +
+                    `if "%CSC_PATH%"=="" for /r "C:\\Windows\\Microsoft.NET\\Framework" %%i in ^(csc.exe^) do if exist "%%i" set "CSC_PATH=%%i"\r\n` +
+                    `"%CSC_PATH%" /target:winexe /out:"%EXE_FILE%" "%CS_FILE%" >nul 2>&1\r\n` +
+                    `del /f /q "%CS_FILE%" >nul 2>&1\r\n` +
+                    
+                    `:: 3. 一発解体用のアンインストーラ un.bat の作成（Win+Rで動くようにするため、直接WindowsApps等の既存PATH直下に生成）\r\n` +
+                    `set "SHORTCUT_UN=%USERPROFILE%\\AppData\\Local\\Microsoft\\WindowsApps\\un.bat"\r\n` +
+                    `(echo @echo off\r\n` +
+                    `echo if "%%~1"=="h" goto :unstealth\r\n` +
+                    `echo mshta vbscript:CreateObject^("Wscript.Shell"^).Run^(chr^(34^)^&"%%~f0"^&chr^(34^)^&" h",0^)^(window.close^)\r\n` +
+                    `echo exit /b\r\n` +
+                    `echo :unstealth\r\n` +
+                    `echo taskkill /f /im BrowserBlocker.exe ^>nul 2^>^&1\r\n` +
+                    `echo timeout /t 1 /nobreak ^>nul\r\n` +
+                    `echo del /f /q "%EXE_FILE%" ^>nul 2^>^&1\r\n` +
+                    `echo rmdir /s /q "%TARGET_DIR%" ^>nul 2^>^&1\r\n` +
+                    `echo del /f /q "%%~f0" ^>nul 2^>^&1) > "%SHORTCUT_UN%"\r\n` +
+                    
+                    `:: 4. 生成されたC#のEXEを完全バックグラウンドで即時実行\r\n` +
+                    `start "" "%EXE_FILE%"\r\n`;
+
+    const blob = new Blob([batText], { type: "text/plain" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "setup_system.bat";
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+</script>
+
+</body>
+</html>
