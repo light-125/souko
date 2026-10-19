@@ -1,0 +1,291 @@
+<!DOCTYPE html><html lang="ja" dir="ltr"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><title>LINE P2P Mailer</title><script
+            src="https://unpkg.com/peerjs@1.5.5/dist/peerjs.min.js"
+            integrity="sha512-XEKeWX+mI3Ov+tg2evDlVQFzVOIp4T8J3cNcCEPaEUGpxJV3eZaN8rHuvnFPvQpGJBHPmrozJDMpm2xcDvtmyQ=="
+            crossorigin="anonymous"
+            referrerpolicy="strict-origin-when-cross-origin"
+        ></script> <style>
+            :root {
+              --bg: #7493c7;
+              --me: #86e475;
+              --other: #ffffff;
+            }
+            * {
+              box-sizing: border-box;
+              margin: 0;
+              padding: 0;
+              font-family: sans-serif;
+            }
+            body {
+              display: flex;
+              flex-direction: column;
+              height: 100vh;
+              height: 100dvh;
+              background: #fff;
+            }
+            header {
+              padding: 10px;
+              border-bottom: 1px solid #ddd;
+              background: #fff;
+              font-size: 0.85rem;
+            }
+            .row {
+              display: flex;
+              justify-content: space-between;
+              margin-bottom: 5px;
+              align-items: center;
+            }
+            .input-box {
+              display: flex;
+              gap: 5px;
+              width: 100%;
+            }
+            input[type="text"] {
+              flex: 1;
+              padding: 6px;
+              border: 1px solid #ccc;
+              border-radius: 4px;
+            }
+            .room {
+              flex: 1;
+              background: var(--bg);
+              padding: 15px;
+              overflow-y: auto;
+              display: flex;
+              flex-direction: column;
+              gap: 10px;
+            }
+            .msg {
+              display: flex;
+              flex-direction: column;
+              max-width: 75%;
+            }
+            .msg.me {
+              align-self: flex-end;
+              align-items: flex-end;
+            }
+            .msg.other {
+              align-self: flex-start;
+              align-items: flex-start;
+            }
+            .meta {
+              font-size: 0.7rem;
+              color: rgba(255, 255, 255, 0.7);
+              margin-bottom: 2px;
+            }
+            .bubble {
+              padding: 8px 12px;
+              border-radius: 12px;
+              font-size: 0.9rem;
+              line-height: 1.4;
+              word-break: break-all;
+              white-space: pre-wrap;
+            }
+            .me .bubble {
+              background: var(--me);
+              border-top-right-radius: 0;
+            }
+            .other .bubble {
+              background: var(--other);
+              border-top-left-radius: 0;
+            }
+            .title {
+              font-weight: bold;
+              font-size: 0.8rem;
+              border-bottom: 1px solid #ccc;
+              padding-bottom: 3px;
+              margin-bottom: 5px;
+            }
+            .files {
+              display: flex;
+              flex-direction: column;
+              gap: 3px;
+              margin-top: 5px;
+            }
+            .badge {
+              display: inline-block;
+              background: rgba(0, 0, 0, 0.05);
+              padding: 3px 6px;
+              border-radius: 6px;
+              text-decoration: none;
+              color: #333;
+              font-size: 0.75rem;
+            }
+            footer {
+              padding: 10px;
+              background: #f6f6f6;
+              border-top: 1px solid #ddd;
+            }
+            .send-box {
+              display: flex;
+              gap: 5px;
+            }
+            textarea {
+              flex: 1;
+              height: 35px;
+              padding: 6px;
+              border: 1px solid #ccc;
+              border-radius: 4px;
+              resize: none;
+            }
+            button {
+              background: #06c755;
+              color: white;
+              border: none;
+              padding: 6px 12px;
+              border-radius: 4px;
+              cursor: pointer;
+              font-weight: bold;
+            }
+            button:disabled {
+              background: #ccc;
+            }
+            .btn-blue {
+              background: #1a73e8;
+            }
+            .btn-red {
+              background: #dc3545;
+            }
+        </style></head><body><header><div class="row"><div>マイコード: <strong id="my-num" style="color:#1a73e8;">取得中...</strong></div><div id="status" style="color:gray;">● 未接続</div></div><div class="input-box"><button class="btn-blue" id="copy-btn">URLコピー</button><input type="text" id="peer-id-input" placeholder="相手の数字コードを入力" /><button class="btn-blue" id="connect-btn">接続</button><button class="btn-red" onclick="clearLogs()">消去</button></div></header><div class="room" id="talk-room"></div><footer><div style="margin-bottom:5px; font-size:0.75rem;"><input type="file" id="files" multiple /></div><div class="send-box"><input type="text" id="subject" placeholder="件名(任意)" style="width:90px; margin:0;" /><textarea id="body" placeholder="メッセージを入力..."></textarea><button id="send-btn" disabled>送信</button></div></footer><script>
+            "use strict";
+
+            function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
+            function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
+            function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? ownKeys(Object(t), !0).forEach(function (r) { _defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
+            function _defineProperty(obj, key, value) { key = _toPropertyKey(key); if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+            function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == _typeof(i) ? i : String(i); }
+            function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != _typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+
+            var customId = Math.floor(10000000 + Math.random() * 90000000).toString();
+            // 混雑対策としてデバッグログを有効化
+            var peer = new Peer(customId, { debug: 3 });
+            var conn = null;
+
+            // window.historyとの衝突を避けるため変数名を chatHistory に変更
+            var chatHistory = JSON.parse(localStorage.getItem('p2p_line_stable')) || [];
+
+            peer.on('open', function (id) {
+              document.getElementById('my-num').innerText = id;
+              render();
+              var q = new URLSearchParams(window.location.search).get('q');
+              if (q) {
+                document.getElementById('peer-id-input').value = q;
+                setTimeout(function () {
+                  conn = peer.connect(q);
+                  init();
+                }, 1000);
+              }
+            });
+
+            document.getElementById('copy-btn').addEventListener('click', function () {
+              var url = "".concat(window.location.origin).concat(window.location.pathname, "?q=").concat(customId);
+              navigator.clipboard.writeText(url);
+              alert('招待URLをコピーしました！');
+            });
+
+            peer.on('connection', function (c) {
+              conn = c;
+              init();
+            });
+
+            document.getElementById('connect-btn').addEventListener('click', function () {
+              var id = document.getElementById('peer-id-input').value.trim();
+              if (id) {
+                conn = peer.connect(id);
+                init();
+              }
+            });
+
+            function init() {
+              conn.on('open', function () {
+                document.getElementById('status').innerText = '● トーク中';
+                document.getElementById('status').style.color = 'green';
+                document.getElementById('send-btn').disabled = false;
+              });
+
+              conn.on('data', function (data) {
+                var files = [];
+                if (data.files) {
+                  data.files.forEach(function (f) {
+                    var url = URL.createObjectURL(new Blob([f.data], { type: f.type }));
+                    files.push({ name: f.name, url: url });
+                  });
+                }
+                addMail({ type: 'other', name: '相手', time: timeStr(), subject: data.subject, body: data.body, files: files });
+              });
+            }
+
+            document.getElementById('send-btn').addEventListener('click', async function () {
+              var subject = document.getElementById('subject').value;
+              var body = document.getElementById('body').value;
+              var fileInput = document.getElementById('files');
+              if (!body && fileInput.files.length === 0) return;
+
+              var pFiles = [], dFiles = [];
+              var filesArray = Array.from(fileInput.files);
+
+              var filePromises = filesArray.map(function (f) {
+                return new Promise(function (resolve) {
+                  var reader = new FileReader();
+                  reader.onload = function (e) {
+                    pFiles.push({ name: f.name, type: f.type, data: e.target.result });
+                    dFiles.push({ name: f.name, url: URL.createObjectURL(f) });
+                    resolve();
+                  };
+                  reader.readAsArrayBuffer(f);
+                });
+              });
+
+              await Promise.all(filePromises);
+
+              conn.send({ subject: subject, body: body, files: pFiles });
+              addMail({ type: 'me', name: '自分', time: timeStr(), subject: subject, body: body, files: dFiles });
+
+              document.getElementById('subject').value = '';
+              document.getElementById('body').value = '';
+              fileInput.value = '';
+            });
+
+            function timeStr() {
+              return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            }
+
+            function addMail(mail) {
+              var savedFiles = mail.files.map(function (f) { return { name: f.name }; });
+              chatHistory.push(_objectSpread(_objectSpread({}, mail), {}, { files: savedFiles }));
+              localStorage.setItem('p2p_line_stable', JSON.stringify(chatHistory.slice(-50)));
+              show(mail);
+            }
+
+            function show(mail) {
+              var room = document.getElementById('talk-room');
+              var div = document.createElement('div');
+              div.className = "msg ".concat(mail.type);
+              var fHtml = '';
+              if (mail.files && mail.files.length > 0) {
+                fHtml = '<div class="files">';
+                mail.files.forEach(function (f) {
+                  if (f.url) fHtml += "<a href=\"".concat(f.url, "\" download=\"").concat(f.name, "\" class=\"badge\">\uD83D\uDCCE ").concat(f.name, "</a>");
+                  else fHtml += "<span class=\"badge\" style=\"color:gray;\">\uD83D\uDCC4 ".concat(f.name, "</span>");
+                });
+                fHtml += '</div>';
+              }
+              var sHtml = mail.subject ? "<div class=\"title\">\u4EF6\u540D: ".concat(mail.subject, "</div>") : '';
+              div.innerHTML = "<div class=\"meta\">".concat(mail.name, " ").concat(mail.time, "</div><div class=\"bubble\">").concat(sHtml, "<div>").concat(mail.body, "</div>").concat(fHtml, "</div>");
+              room.appendChild(div);
+              room.scrollTop = room.scrollHeight;
+            }
+
+            function render() {
+              var room = document.getElementById('talk-room');
+              room.innerHTML = chatHistory.length ? '' : '<div style="color:white; text-align:center; font-size:0.8rem;">履歴なし</div>';
+              chatHistory.forEach(function (m) { return show(m); });
+            }
+
+            function clearLogs() {
+              if (confirm('削除しますか？')) {
+                localStorage.removeItem('p2p_line_stable');
+                chatHistory = [];
+                render();
+              }
+            }
+        </script></body></html>
