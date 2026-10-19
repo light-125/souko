@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>WebRTC（PeerJS）電話機</title>
+    <script src="https://unpkg.com/peerjs@1.5.5/dist/peerjs.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz@6..144&family=LINE+Seed+JP:wght@100;400;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Google Sans Flex', 'LINE Seed JP', sans-serif;
+            padding: 20px;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        .box {
+            border: 1px solid #ccc;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+        }
+        button {
+            padding: 8px 15px;
+            cursor: pointer;
+        }
+        input {
+            padding: 6px;
+            width: 200px;
+        }
+        #status {
+            font-weight: bold;
+            color: green;
+        }
+  </style>
+</head>
+<body>
+  <h1>P2P Voice Call (PeerJS)</h1>
+  <label>リロード（再読み込み）をするとIDが変わって、接続が切れてしまうので接続中にF5キーや再読み込みボタンを押さないように気を付けてください</label>
+  <div class="box">
+    <h3>1. あなたの接続ID</h3>
+    <p>あなたのID: <span id="my-id">読み込み中...</span></p>
+    <p>ステータス: <span id="status">準備中</span></p>
+  </div>
+  <div class="box">
+    <h3>2. 相手に発信する</h3>
+    <input type="text" id="remote-id" placeholder="相手のIDを入力">
+    <button id="call-btn">発信（通話開始）</button>
+  </div>
+  <audio id="remote-audio" autoplay></audio>
+  <script>
+    let localStream = null;
+    const remoteAudio = document.getElementById('remote-audio');
+    const peer = new Peer({
+      debug: 2
+    });
+    peer.on('open', (id) => {
+      document.getElementById('my-id').textContent = id;
+      document.getElementById('status').textContent = '待機中（相手からの接続を待っています）';
+    });
+    navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+      .then((stream) => {
+        localStream = stream;
+      })
+      .catch((err) => {
+        alert('マイクの許可が必要です: ' + err.message);
+      });
+    peer.on('call', (mediaConnection) => {
+      document.getElementById('status').textContent = '通話中...';
+      mediaConnection.answer(localStream);
+      mediaConnection.on('stream', (remoteStream) => {
+        remoteAudio.srcObject = remoteStream;
+      });
+    });
+    document.getElementById('call-btn').addEventListener('click', () => {
+      const peerId = document.getElementById('remote-id').value;
+      if (!peerId) return alert('相手のIDを入力してください');
+      if (!localStream) return alert('マイクが準備できていません');
+      document.getElementById('status').textContent = '発信中...';
+      const mediaConnection = peer.call(peerId, localStream);
+      mediaConnection.on('stream', (remoteStream) => {
+        remoteAudio.srcObject = remoteStream;
+        document.getElementById('status').textContent = '通話中...';
+      });
+    });
+  </script>
+</body>
+</html>
