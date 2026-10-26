@@ -1,0 +1,530 @@
+<!doctype html>
+<html lang="ja" dir="ltr">
+	<head>
+		<link rel="preconnect" href="https://fonts.googleapis.com">
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+		<link rel="preconnect" href="https://cdn.jsdelivr.net">
+		<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@200..900&display=swap" rel="stylesheet">
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/material-ui@0.1.23/dist/less/resets/formalize.min.css">
+		<link
+			rel="apple-touch-icon"
+			sizes="180x180"
+			href="https://cdn.jsdelivr.net/gh/light-125/souko@main/apple-touch-icon.png"
+		>
+		<link
+			rel="icon"
+			type="image/png"
+			sizes="32x32"
+			href="https://cdn.jsdelivr.net/gh/light-125/souko@main/favicon-32x32.png"
+		>
+		<link
+			rel="icon"
+			type="image/png"
+			sizes="16x16"
+			href="https://cdn.jsdelivr.net/gh/light-125/souko@main/favicon-16x16.png"
+		>
+		<link rel="manifest" href="https://cdn.jsdelivr.net/gh/light-125/souko@main/site.webmanifest" />
+		<script 
+			src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js" 
+			integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" 
+			crossorigin="anonymous"
+			referrerpolicy="no-referrer-when-downgrade"
+		></script>
+		<script src="https://cdn.jsdelivr.net/npm/core-js@3.51.0/proposals/reflect-metadata.min.js"></script>
+		<meta charset="UTF-8" />
+		<title>消しゴムバトル</title>
+		<link
+			rel="stylesheet"
+			href="https://cdn.jsdelivr.net/npm/animate.css@4.1/animate.min.css"
+			integrity="sha256-X7rrn44l1+AUO65h1LGALBbOc5C5bOstSYsNlv9MhT8="
+			crossorigin="anonymous"
+			referrerpolicy="no-referrer-when-downgrade"
+		/>
+		<style>
+			body {
+			    background: #e0d0b0;
+			    text-align: center;
+			    font-family: 'Noto Sans JP', sans-serif !important;
+			    user-select: none;
+			    margin: 0;
+			    padding-top: 20px;
+			}
+			canvas {
+			    background: #d7ccc8;
+			    border: 15px solid #8d6e63;
+			    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+			    display: block;
+			    margin: 10px auto;
+			}
+			#info {
+			    font-size: 22px;
+			    font-weight: bold;
+			    color: #3e2723;
+			    height: 30px;
+			}
+			.scr {
+			    position: fixed;
+			    top: 0;
+			    left: 0;
+			    width: 100%;
+			    height: 100%;
+			    background: rgba(0, 0, 0, 0.9);
+			    z-index: 10;
+			    display: flex;
+			    flex-direction: column;
+			    align-items: center;
+			    justify-content: center;
+			}
+			h1 {
+			    color: #ffeb3b;
+			    font-size: 44px;
+			    margin-bottom: 20px;
+			}
+			#txt {
+			    font-size: 64px;
+			    font-weight: bold;
+			    margin-bottom: 20px;
+			}
+			.btn {
+			    font-size: 24px;
+			    padding: 12px 35px;
+			    margin: 10px;
+			    font-weight: bold;
+			    background: #4caf50;
+			    color: white;
+			    border: none;
+			    border-radius: 8px;
+			    cursor: pointer;
+				position: relative;
+  overflow: hidden;
+  
+  display: inline-block;
+  padding: 14px 32px;
+  font-size: 16px;
+  font-weight: bold;
+  color: #ffffff;
+  background: #3b82f6; /* 元の色（グラデーションでも何色でもOK！） */
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  
+  box-shadow: 0 4px 6px -1px #0000001a, 
+              0 2px 4px -1px #0000000f; 
+  
+  transform: scale(1);
+  transition: box-shadow 0.3s cubic-bezier(0.25, 1, 0.5, 1),
+              transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+			}
+			#m1 {
+				animation-delay: 0.5s;
+			}
+			#m2 {
+				animation-delay: 0.85s;
+			}
+			#m1, #m2:hover {
+				background-color: #1d4ed8;
+  				transform: scale(1.05);     /* 【少し大きく】5%拡大 */
+  
+  /* 影を濃く、広くする（末尾の透明度を 1a から 26 に上げて濃くしています） */
+  box-shadow: 0 10px 15px -3px #00000026, 
+              0 4px 6px -2px #0000001a;
+
+			}
+		</style>
+	</head>
+	<body>
+		<div id="info" class="animate__animated animate__bounce">モード選択してください</div>
+		<canvas id="canvas" width="600" height="400" class="animate__animated animate__bounce"></canvas>
+		<div id="home" class="scr">
+			<h1 class="animate__animated animate__bounce animate__bounceIn">🏫 消しゴムバトル 🏫</h1>
+			<button id="m1" class="btn animate__animated animate__bounce animate__flip animate__backInDown animate__pulse" style="background:#1e88e5">1人プレイ</button>
+			<button id="m2" class="btn animate__animated animate__bounce animate__flip animate__backInDown animate__pulse" style="background:#e53935">2人プレイ</button>
+		</div>
+		<div id="overlay" class="scr" style="display:none">
+			<div id="txt"></div>
+			<button id="re" class="btn">もう一度遊ぶ</button>
+		</div>
+		<script>
+			"use strict";
+			function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+			function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
+			function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
+			function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
+			function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i]; return arr2; }
+			function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+			function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
+			function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+			function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
+			function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
+			(function () {
+			  var J = jQuery.noConflict();
+			  var h = document.getElementById("canvas"),
+			    ctx = h.getContext("2d");
+			  var p1,
+			    p2,
+			    obs,
+			    isP1 = !0,
+			    state = "menu",
+			    mode = 1,
+			    charge = 0,
+			    aim = 0,
+			    drag = {
+			      x: 0,
+			      y: 0
+			    },
+			    actx,
+			    osc;
+			  function snd(f) {
+			    if (!f) {
+			      if (osc) {
+			        osc.stop();
+			        osc.disconnect();
+			        osc = null;
+			      }
+			      return;
+			    }
+			    try {
+			      if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+			      if ("suspended" === actx.state) actx.resume();
+			      if (!osc) {
+			        osc = actx.createOscillator();
+			        var g = actx.createGain();
+			        g.gain.setValueAtTime(0.04, actx.currentTime);
+			        osc.connect(g);
+			        g.connect(actx.destination);
+			        osc.start();
+			      }
+			      osc.frequency.setValueAtTime(f, actx.currentTime);
+			    } catch (e) {}
+			  }
+			  var RigidBox = /*#__PURE__*/function () {
+			    function RigidBox(x, y, w, h, m, color) {
+			      var name = arguments.length > 6 && arguments[6] !== undefined ? arguments[6] : "";
+			      _classCallCheck(this, RigidBox);
+			      Object.assign(this, {
+			        x: x,
+			        y: y,
+			        w: w,
+			        h: h,
+			        m: m,
+			        color: color,
+			        name: name,
+			        vx: 0,
+			        vy: 0,
+			        va: 0,
+			        angle: 0,
+			        out: !1,
+			        base: color
+			      });
+			      this.I = m * (w * w + h * h) / 12;
+			    }
+			    _createClass(RigidBox, [{
+			      key: "getV",
+			      value: function getV() {
+			        var res = [],
+			          cos = Math.cos(this.angle),
+			          sin = Math.sin(this.angle),
+			          hw = this.w / 2,
+			          hh = this.h / 2;
+			        for (var _i = 0, _arr = [[-hw, -hh], [hw, -hh], [hw, hh], [-hw, hh]]; _i < _arr.length; _i++) {
+			          var e = _arr[_i];
+			          res.push({
+			            x: this.x + e[0] * cos - e[1] * sin,
+			            y: this.y + e[0] * sin + e[1] * cos
+			          });
+			        }
+			        return res;
+			      }
+			    }, {
+			      key: "draw",
+			      value: function draw() {
+			        if (!this.out) {
+			          ctx.save();
+			          ctx.translate(this.x, this.y);
+			          ctx.rotate(this.angle);
+			          ctx.fillStyle = this.color;
+			          ctx.fillRect(-this.w / 2, -this.h / 2, this.w, this.h);
+			          if (this.name) {
+			            ctx.fillStyle = "#fff";
+			            ctx.fillRect(-this.w / 2, -this.h / 2, 7, this.h);
+			          }
+			          ctx.restore();
+			        }
+			      }
+			    }, {
+			      key: "update",
+			      value: function update() {
+			        if (!this.out && "over" !== state) {
+			          this.x += this.vx;
+			          this.y += this.vy;
+			          this.angle += this.va;
+			          this.vx *= 0.78;
+			          this.vy *= 0.78;
+			          this.va *= 0.66;
+			          if (Math.abs(this.vx) < 0.04) this.vx = 0;
+			          if (Math.abs(this.vy) < 0.04) this.vy = 0;
+			          if (Math.abs(this.va) < 0.005) this.va = 0;
+			          if (this.name && (this.x < 0 || this.x > h.width || this.y < 0 || this.y > h.height)) {
+			            this.out = !0;
+			            over();
+			          }
+			        }
+			      }
+			    }]);
+			    return RigidBox;
+			  }();
+			  function init(m) {
+			    mode = m;
+			    var sY = h.height - 31;
+			    p1 = new RigidBox(60 + 180 * Math.random(), sY, 45, 25, 1.5, "#1e88e5", "1P (青)");
+			    p2 = new RigidBox(360 + 180 * Math.random(), sY, 45, 25, 1.5, "#e53935", 1 === mode ? "CPU" : "2P (赤)");
+			    obs = new RigidBox(160 + 280 * Math.random(), 120 + 120 * Math.random(), 85, 16, 1e5, "#333");
+			    isP1 = Math.random() < 0.5;
+			    state = "wait";
+			    J("#home").hide();
+			    J("#overlay").hide();
+			    msg();
+			  }
+			  function msg() {
+			    1 === mode ? isP1 ? J("#info").text("あなたのターン！引っ張って飛ばそう") : (J("#info").text("CPUが狙っています..."), cpu()) : J("#info").text(isP1 ? "1P (青) のターン！" : "2P (赤) のターン！");
+			  }
+			  function sat(b1, b2) {
+			    var v1 = b1.getV(),
+			      v2 = b2.getV(),
+			      overlap = Infinity,
+			      minA = null,
+			      lists = [v1, v2];
+			    for (var b = 0; b < 2; b++) for (var i = 0; i < lists[b].length; i++) {
+			      var p1_v = lists[b][i],
+			        p2_v = lists[b][(i + 1) % lists[b].length],
+			        axis = {
+			          x: -(p2_v.y - p1_v.y),
+			          y: p2_v.x - p1_v.x
+			        },
+			        len = Math.sqrt(axis.x * axis.x + axis.y * axis.y);
+			      if (0 !== len) {
+			        axis.x /= len;
+			        axis.y /= len;
+			        var min1 = Infinity,
+			          max1 = -Infinity,
+			          min2 = Infinity,
+			          max2 = -Infinity;
+			        var _iterator = _createForOfIteratorHelper(v1),
+			          _step;
+			        try {
+			          for (_iterator.s(); !(_step = _iterator.n()).done;) {
+			            var p = _step.value;
+			            var pr = p.x * axis.x + p.y * axis.y;
+			            min1 = Math.min(min1, pr);
+			            max1 = Math.max(max1, pr);
+			          }
+			        } catch (err) {
+			          _iterator.e(err);
+			        } finally {
+			          _iterator.f();
+			        }
+			        var _iterator2 = _createForOfIteratorHelper(v2),
+			          _step2;
+			        try {
+			          for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
+			            var _p = _step2.value;
+			            var _pr = _p.x * axis.x + _p.y * axis.y;
+			            min2 = Math.min(min2, _pr);
+			            max2 = Math.max(max2, _pr);
+			          }
+			        } catch (err) {
+			          _iterator2.e(err);
+			        } finally {
+			          _iterator2.f();
+			        }
+			        if (max1 < min2 || max2 < min1) return null;
+			        var o = Math.min(max1, max2) - Math.max(min1, min2);
+			        if (o < overlap) {
+			          overlap = o;
+			          minA = axis;
+			        }
+			      }
+			    }
+			    if ((b2.x - b1.x) * minA.x + (b2.y - b1.y) * minA.y < 0) {
+			      minA.x = -minA.x;
+			      minA.y = -minA.y;
+			    }
+			    return {
+			      n: minA,
+			      o: overlap
+			    };
+			  }
+			  function resolve(b1, b2) {
+			    if (!b1.out && !b2.out) {
+			      var hit = sat(b1, b2);
+			      if (hit) {
+			        var n = hit.n,
+			          invM1 = b1.name ? 1 / b1.m : 0,
+			          invM2 = b2.name ? 1 / b2.m : 0,
+			          total = invM1 + invM2;
+			        if (0 !== total) {
+			          b1.x -= n.x * hit.o * (invM1 / total);
+			          b1.y -= n.y * hit.o * (invM1 / total);
+			          b2.x += n.x * hit.o * (invM2 / total);
+			          b2.y += n.y * hit.o * (invM2 / total);
+			          var rx = (b2.x - b1.x) / 2,
+			            ry = (b2.y - b1.y) / 2,
+			            rvx = b2.vx - b2.va * ry - (b1.vx - b1.va * ry),
+			            rvy = b2.vy + b2.va * rx - (b1.vy + b1.va * rx),
+			            vNorm = rvx * n.x + rvy * n.y;
+			          if (!(vNorm > 0)) {
+			            var rn1 = rx * n.y - ry * n.x,
+			              rn2 = rx * n.y - ry * n.x,
+			              invI1 = b1.name ? 1 / b1.I : 0,
+			              invI2 = b2.name ? 1 / b2.I : 0,
+			              j = -1.55 * vNorm / (total + rn1 * rn1 * invI1 + rn2 * rn2 * invI2);
+			            b1.vx -= j * invM1 * n.x;
+			            b1.vy -= j * invM1 * n.y;
+			            b1.va -= rn1 * invI1 * j;
+			            b2.vx += j * invM2 * n.x;
+			            b2.vy += j * invM2 * n.y;
+			            b2.va += rn2 * invI2 * j;
+			          }
+			        }
+			      }
+			    }
+			  }
+			  function over() {
+			    if ("over" !== state) {
+			      state = "over";
+			      snd(0);
+			      p1.vx = p1.vy = p1.va = p2.vx = p2.vy = p2.va = 0;
+			      J("#txt").text(p1.out && p2.out ? "引き分け！" : p1.out ? 1 === mode ? "YOU LOSE... 😭" : "2P (赤) の勝ち！🏆" : 1 === mode ? "👑 YOU WIN !!" : "1P (青) の勝ち！🏆");
+			      J("#txt").css("color", p1.out && p2.out ? "#ffeb3b" : p1.out ? "#e53935" : "#4caf50");
+			      J("#info").text("ゲーム終了");
+			      J("#overlay").show("flex");
+			    }
+			  }
+			  function cpu() {
+			    state = "move";
+			    setTimeout(function () {
+			      if (!p2.out && "over" !== state) {
+			        var ang = Math.atan2(p1.y - p2.y, p1.x - p2.x),
+			          pw = Math.min(0.13 * Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2)) + 1.5, 12);
+			        if (Math.random() < 0.35) if (Math.random() < 0.5) {
+			          J("#info").text("CPU：あさっての方向に飛ばした！");
+			          ang += Math.random() > 0.5 ? 1.4 : -1.4;
+			          pw = 7;
+			        } else {
+			          J("#info").text("CPU：力みすぎて自爆した！");
+			          pw = 22;
+			        }
+			        p2.vx = Math.cos(ang) * pw;
+			        p2.vy = Math.sin(ang) * pw;
+			        p2.va = 0.5 * (Math.random() - 0.5);
+			      }
+			    }, 1300);
+			  }
+			  var pos = function pos(e) {
+			      var r = h.getBoundingClientRect(),
+			        t = e.touches ? e.touches[0] : e;
+			      return {
+			        x: t.clientX - r.left,
+			        y: t.clientY - r.top
+			      };
+			    },
+			    start = function start(e) {
+			      if ("wait" === state && !(1 === mode && !isP1)) {
+			        var m = pos(e),
+			          act = isP1 ? p1 : p2;
+			        if (Math.sqrt(Math.pow(m.x - act.x, 2) + Math.pow(m.y - act.y, 2)) < 35) {
+			          state = "charge";
+			          drag = m;
+			          snd(200);
+			        }
+			      }
+			    },
+			    move = function move(e) {
+			      if ("charge" === state) {
+			        drag = pos(e);
+			        var act = isP1 ? p1 : p2,
+			          dx = drag.x - act.x,
+			          dy = drag.y - act.y;
+			        charge = 0.008 * Math.sqrt(dx * dx + dy * dy);
+			        aim = Math.atan2(-dy, -dx);
+			      }
+			    },
+			    end = function end() {
+			      if ("charge" === state) {
+			        snd(0);
+			        var act = isP1 ? p1 : p2;
+			        act.vx = 22 * Math.cos(aim) * charge;
+			        act.vy = 22 * Math.sin(aim) * charge;
+			        act.va = 0.4 * (Math.random() - 0.5) * charge;
+			        act.color = act.base;
+			        state = "move";
+			      }
+			    };
+			  J("#m1").on("click", function () {
+			    return init(1);
+			  });
+			  J("#m2").on("click", function () {
+			    return init(2);
+			  });
+			  J("#re").on("click", function () {
+			    state = "menu";
+			    J("#home").show("flex");
+			    J("#overlay").hide();
+			    J("#info").text("モード選択してください");
+			    ctx.clearRect(0, 0, h.width, h.height);
+			  });
+			  h.addEventListener("mousedown", start);
+			  window.addEventListener("mousemove", move);
+			  window.addEventListener("mouseup", end);
+			  h.addEventListener("touchstart", function (e) {
+			    start(e);
+			    e.preventDefault();
+			  }, {
+			    passive: !1
+			  });
+			  h.addEventListener("touchmove", function (e) {
+			    move(e);
+			    e.preventDefault();
+			  }, {
+			    passive: !1
+			  });
+			  window.addEventListener("touchend", end);
+			  function mainLoop() {
+			    ctx.clearRect(0, 0, h.width, h.height);
+			    if ("menu" !== state) {
+			      p1.update();
+			      p2.update();
+			      obs.update();
+			      resolve(p1, p2);
+			      resolve(p1, obs);
+			      resolve(p2, obs);
+			      obs.draw();
+			      p1.draw();
+			      p2.draw();
+			      var act = isP1 ? p1 : p2;
+			      if ("charge" === state) {
+			        snd(200 + 800 * charge);
+			        var lim = Math.min(charge, 2);
+			        act.color = isP1 ? "rgb(".concat(30 + 50 * lim, ",").concat(136 - 50 * lim, ",").concat(229 - 50 * lim, ")") : "rgb(".concat(229 - 50 * lim, ",").concat(57 - 20 * lim, ",").concat(53 - 20 * lim, ")");
+			        ctx.beginPath();
+			        ctx.strokeStyle = "rgba(255, 255, 255, 0.6)";
+			        ctx.lineWidth = 5;
+			        ctx.lineCap = "round";
+			        ctx.moveTo(act.x, act.y);
+			        ctx.lineTo(drag.x, drag.y);
+			        ctx.stroke();
+			        J("#info").text("".concat(act.name, " \u30C1\u30E3\u30FC\u30B8\u4E2D... (").concat(Math.floor(100 * charge), "%)"));
+			      }
+			      if ("move" === state && 0 === p1.vx && 0 === p1.vy && 0 === p1.va && 0 === p2.vx && 0 === p2.vy && 0 === p2.va && "over" !== state) {
+			        isP1 = !isP1;
+			        state = "wait";
+			        msg();
+			      }
+			    }
+			    requestAnimationFrame(mainLoop);
+			  }
+			  mainLoop();
+			})();
+		</script>
+	</body>
+</html>
